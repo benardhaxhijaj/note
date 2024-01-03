@@ -24,6 +24,8 @@ export default function App() {
     return unsubscribe;
   }, []);
 
+  const sortedNotes = notes.sort((a, b) => b.updatedAt - a.updatedAt);
+
   React.useEffect(() => {
     if (!currentNoteId) {
       setCurrentNoteId(notes[0]?.id);
@@ -32,8 +34,9 @@ export default function App() {
 
   async function createNewNote() {
     const newNote = {
-      id: nanoid(),
       body: "# Type your markdown note's title here",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     };
     const newNoteRef = await addDoc(notesCollections, newNote);
     setCurrentNoteId(newNoteRef.id);
@@ -41,7 +44,11 @@ export default function App() {
 
   async function updateNote(text) {
     const docRef = doc(db, "notes", currentNoteId);
-    await setDoc(docRef, { body: text }, { merge: true });
+    await setDoc(
+      docRef,
+      { body: text, updatedAt: Date.now() },
+      { merge: true }
+    );
   }
 
   async function deleteNote(noteId) {
@@ -54,7 +61,7 @@ export default function App() {
       {notes.length > 0 ? (
         <Split sizes={[30, 70]} direction="horizontal" className="split">
           <Sidebar
-            notes={notes}
+            notes={sortedNotes}
             currentNote={currentNote}
             setCurrentNoteId={setCurrentNoteId}
             newNote={createNewNote}
