@@ -2,13 +2,13 @@ import React from "react";
 import Sidebar from "./components/Sidebar";
 import Editor from "./components/Editor";
 import Split from "react-split";
-import { nanoid } from "nanoid";
 import { onSnapshot, addDoc, doc, deleteDoc, setDoc } from "firebase/firestore";
 import { notesCollections, db } from "./firebase";
 
 export default function App() {
   const [notes, setNotes] = React.useState([]);
   const [currentNoteId, setCurrentNoteId] = React.useState("");
+  const [tempNoteText, setTempNoteText] = React.useState("");
 
   const currentNote =
     notes.find((note) => note.id === currentNoteId) || notes[0];
@@ -23,6 +23,21 @@ export default function App() {
     });
     return unsubscribe;
   }, []);
+
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (tempNoteText !== currentNote.body) {
+        updateNote(tempNoteText);
+      }
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [tempNoteText]);
+
+  React.useEffect(() => {
+    if (currentNote) {
+      setTempNoteText(currentNote.body);
+    }
+  }, [currentNote]);
 
   const sortedNotes = notes.sort((a, b) => b.updatedAt - a.updatedAt);
 
@@ -67,7 +82,10 @@ export default function App() {
             newNote={createNewNote}
             deleteNote={deleteNote}
           />
-          <Editor currentNote={currentNote} updateNote={updateNote} />
+          <Editor
+            tempNoteText={tempNoteText}
+            setTempNoteText={setTempNoteText}
+          />
         </Split>
       ) : (
         <div className="no-notes">
